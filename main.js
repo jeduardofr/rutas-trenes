@@ -149,12 +149,8 @@ function displayConclusions(results) {
 
 	for (const [rule, value] of Object.entries(results)) {
 		const li = document.createElement('li');
-		const div = document.createElement('div');
-		div.textContent = `${rule} = ${value}`;
-
-		div.classList.add("inline-block", "bg-neutral-900", "text-slate-400", "px-4", "py-2", "rounded-md", "border", "border-slate-400");
-
-		li.appendChild(div);
+		li.textContent = `${rule} = ${value}`;
+		li.classList.add("inline-block", "bg-neutral-900", "text-slate-400", "px-4", "py-2", "rounded-md", "border", "border-slate-400");
 		$conclusions.appendChild(li);
 	}
 }
