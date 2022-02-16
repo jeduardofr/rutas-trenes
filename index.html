@@ -4,6 +4,7 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<script src="https://cdn.tailwindcss.com"></script>
+		<script src="/p5.js"></script>
 	</head>
 
 	<body class="bg-zinc-800">
@@ -17,13 +18,17 @@
 			<br />
 			<br />
 
-			<h1 class="text-slate-400 font-bold text-2xl">Gráfica</h1>
+			<div class="grid grid-cols-2 gap-x-8">
+				<div class="col-span-1">
+					<h1 class="text-slate-400 font-bold text-2xl">Gráfica</h1>
+					<div id="diagram"></div>
+				</div>
 
-			<br />
-			<br />
-
-			<h1 class="text-slate-400 font-bold text-2xl">Conclusiones</h1>
-			<ul class="space-y-2 space-x-2 pt-2" id="conclusions"></ul>
+				<div class="col-span-1">
+					<h1 class="text-slate-400 font-bold text-2xl">Conclusiones</h1>
+					<ul class="space-y-2 pt-2" id="conclusions"></ul>
+				</div>
+			</div>
 		</main>
 		<script src="/main.js"></script>
 	</body>

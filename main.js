@@ -12,6 +12,66 @@ const STATE = {
 	FREE: 'libre'
 }
 
+const DIR = {
+	LEFT: 'izquierda',
+	RIGHT: 'derecha'
+}
+
+const roads = {
+	R1: [{ x: 40, y: 80 }, { x: 120, y: 80 }],
+	R2: [{ x: 40, y: 240 }, { x: 120, y: 240 }],
+
+	R3: [{ x: 200, y: 160 }, { x: 280, y: 160 }],
+
+	R4: [{ x: 360, y: 80 }, { x: 440, y: 80 }],
+	R5: [{ x: 360, y: 240 }, { x: 440, y: 240 }],
+
+	R6: [{ x: 520, y: 160 }, { x: 600, y: 160 }],
+
+	R7: [{ x: 680, y: 80 }, { x: 760, y: 80 }],
+	R8: [{ x: 680, y: 240 }, { x: 760, y: 240 }],
+}
+
+const roadConnections = {
+	RC1: [{ x: 120, y: 80 }, { x: 200, y: 160 }],
+	RC2: [{ x: 120, y: 240 }, { x: 200, y: 160 }],
+
+	RC3: [{ x: 280, y: 160 }, { x: 360, y: 80 }],
+	RC4: [{ x: 280, y: 160 }, { x: 360, y: 240 }],
+
+	RC5: [{ x: 440, y: 80 }, { x: 520, y: 160 }],
+	RC6: [{ x: 440, y: 240 }, { x: 520, y: 160 }],
+
+	RC7: [{ x: 600, y: 160 }, { x: 680, y: 80 }],
+	RC8: [{ x: 600, y: 160 }, { x: 680, y: 240 }],
+}
+
+const coordsByRule = {
+	S1: { x: 60, y: 70 },
+	S2: { x: 60, y: 230 },
+	S3: { x: 380, y: 70 },
+	S4: { x: 700, y: 70 },
+	S5: { x: 700, y: 230 },
+
+	U1: { x: 110, y: 70, dir: DIR.RIGHT },
+	U2: { x: 210, y: 150, dir: DIR.LEFT },
+	U3: { x: 270, y: 150, dir: DIR.RIGHT },
+	U4: { x: 530, y: 150, dir: DIR.LEFT },
+	U5: { x: 590, y: 150, dir: DIR.RIGHT },
+	U6: { x: 690, y: 70, dir: DIR.LEFT },
+	U7: { x: 370, y: 70, dir: DIR.LEFT },
+	U8: { x: 430, y: 70, dir: DIR.RIGHT },
+
+	L1: { x: 110, y: 250, dir: DIR.RIGHT },
+	L2: { x: 210, y: 170, dir: DIR.LEFT },
+	L3: { x: 270, y: 170, dir: DIR.RIGHT },
+	L4: { x: 530, y: 170, dir: DIR.LEFT },
+	L5: { x: 590, y: 170, dir: DIR.RIGHT },
+	L6: { x: 690, y: 250, dir: DIR.LEFT },
+}
+
+let resultsToRender = {};
+
 function createDefaultStation() {
 	return STATE.FREE;
 }
@@ -149,8 +209,11 @@ function displayConclusions(results) {
 
 	for (const [rule, value] of Object.entries(results)) {
 		const li = document.createElement('li');
-		li.textContent = `${rule} = ${value}`;
-		li.classList.add("inline-block", "bg-neutral-900", "text-slate-400", "px-4", "py-2", "rounded-md", "border", "border-slate-400");
+		const div = document.createElement('div');
+		div.textContent = `${rule} = ${value}`;
+		div.classList.add("inline-block", "bg-neutral-900", "text-slate-400", "px-4", "py-2", "rounded-md", "border", "border-slate-400");
+
+		li.appendChild(div);
 		$conclusions.appendChild(li);
 	}
 }
@@ -162,5 +225,93 @@ $continue.addEventListener('click', function (e) {
 	const results = computeResults(rules);
 
 	displayConclusions(results);
+	resultsToRender = { ...rules, ...results };
+	console.warn(resultsToRender);
 });
+
+function diagram(ctx) {
+	ctx.setup = function() {
+		ctx.createCanvas(800, 300);
+		ctx.background(255);
+		ctx.textSize(12);
+	}
+
+	ctx.draw = function() {
+		ctx.background(255);
+
+		let solution = [];
+		if (Object.keys(resultsToRender).length) {
+			solution = ['R1', 'R3', 'R5', 'R6', 'R7', 'RC1', 'RC4', 'RC6', 'RC7'];
+		}
+
+		for (const [rule, road] of Object.entries(roads)) {
+			const [start, end] = road;
+			ctx.stroke(0);
+			if (solution.includes(rule)) ctx.stroke(194, 232, 18);
+			ctx.line(start.x, start.y, end.x, end.y);
+			ctx.stroke(0);
+		}
+
+		ctx.strokeWeight(2);
+		for (const [rule, road] of Object.entries(roadConnections)) {
+			const [start, end] = road;
+			ctx.stroke(0);
+			if (solution.includes(rule)) ctx.stroke(194, 232, 18);
+			ctx.line(start.x, start.y, end.x, end.y);
+			ctx.stroke(0);
+		}
+
+		ctx.strokeWeight(1);
+		ctx.fill(255);
+		for (const [rule, value] of Object.entries(resultsToRender)) {
+			if (rule in coordsByRule) {
+				switch (true) {
+					case rule.startsWith('S'): {
+						ctx.fill(255);
+						const coords = coordsByRule[rule];
+						if (value === STATE.BUSY) ctx.fill(0, 0, 255);
+						ctx.rect(coords.x, coords.y, 40, 20);
+
+						ctx.fill(0);
+						if (value === STATE.BUSY) ctx.fill(255);
+						ctx.text(rule, coords.x + 15, coords.y + 15);
+						ctx.fill(0);
+					} break;
+					case rule.startsWith('U') || rule.startsWith('L'): {
+						ctx.fill(255);
+						const coords = coordsByRule[rule];
+						if (value === COLORS.GREEN) ctx.fill(0, 255, 0);
+						else ctx.fill(255, 0, 0);
+						ctx.circle(coords.x, coords.y, 10);
+
+						ctx.fill(0);
+						if (rule.startsWith('U')) {
+							ctx.text(rule, coords.x, coords.y - 10);
+							ctx.line(coords.x, coords.y - 25, coords.x + 10, coords.y - 25);
+							if (coords.dir === DIR.RIGHT) {
+								ctx.line(coords.x + 5, coords.y - 30, coords.x + 10, coords.y - 25);
+								ctx.line(coords.x + 5, coords.y - 20, coords.x + 10, coords.y - 25);
+							} else {
+								ctx.line(coords.x, coords.y - 25, coords.x + 5, coords.y - 30);
+								ctx.line(coords.x, coords.y - 25, coords.x + 5, coords.y - 20);
+							}
+						} else {
+							ctx.text(rule, coords.x, coords.y + 20);
+							ctx.line(coords.x, coords.y + 25, coords.x + 10, coords.y + 25);
+							if (coords.dir === DIR.RIGHT) {
+								ctx.line(coords.x + 5, coords.y + 30, coords.x + 10, coords.y + 25);
+								ctx.line(coords.x + 5, coords.y + 20, coords.x + 10, coords.y + 25);
+							} else {
+								ctx.line(coords.x, coords.y + 25, coords.x + 5, coords.y + 30);
+								ctx.line(coords.x, coords.y + 25, coords.x + 5, coords.y + 20);
+							}
+						}
+					} break;
+				}
+			}
+		}
+	}
+}
+
+new p5(diagram, 'diagram');
 
